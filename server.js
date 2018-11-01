@@ -3,7 +3,7 @@ require('dotenv')
     path: `./config/${process.env.NODE_ENV}.env`
   })
 
-var app = require('./app')
+var app = require('./lib/app')
 var port = process.env.PORT || 3000
-const server = app.listen(port, () => console.log('Express server listening on port ' + port))
+const server = app.listen(port)
 module.exports = server

@@ -41,19 +41,11 @@ function me (token) {
     .then(res => res.body)
 }
 
-describe('AuthController', function () {
-  before((done) => {
-    clearDB(() => {
-      done()
-    })
-  })
-  after((done) => {
-    clearDB(() => {
-      done()
-    })
-  })
+describe('auth', function () {
+  before(() => clearDB())
+  after(() => clearDB())
 
-  describe('AuthProvider', function () {
+  describe('AuthController', function () {
     describe('.register', function () {
       it('should register a new user', function () {
         return registerUser()

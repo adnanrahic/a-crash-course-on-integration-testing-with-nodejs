@@ -1,14 +1,12 @@
-const app = require('../app')
+const app = require('../lib/app')
 const mongoose = require('mongoose')
-const async = require('async')
+const _ = require('lodash')
 
 function getApp () {
   return app
 }
-function clearDB (done) {
-  async.each(mongoose.models, function (model, next) {
-    model.deleteMany(next)
-  }, done)
+async function clearDB () {
+  return Promise.all(_.map(mongoose.models, model => model.deleteMany()))
 }
 function getModel (model) {
   return mongoose.model(model)

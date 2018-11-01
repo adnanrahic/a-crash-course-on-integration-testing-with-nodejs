@@ -9,7 +9,7 @@ jobs:
       - image: circleci/node:10
       - image: circleci/mongo:4
 
-    working_directory: ~/code/securing-restful-apis-with-jwt
+    working_directory: ~/code/a-crash-course-on-integration-testing-with-nodejs
 
     steps:
       - checkout

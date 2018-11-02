@@ -12,7 +12,6 @@ const {
 const app = getApp()
 const User = getModel('User')
 
-let token
 const testUser = {
   name: 'superAdmin',
   email: 'admin@example.com',
@@ -47,53 +46,53 @@ describe('auth', function () {
 
   describe('AuthController', function () {
     describe('.register', function () {
-      it('should register a new user', function () {
-        return registerUser()
-          .then(res => {
-            expect(res).to.have.status(200)
-            expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
-            expect(res.body).to.have.property('token')
-            token = res.body.token
+      it('should register a new user', async () => {
+        const res = await registerUser()
 
-            return token
-          })
-          .then(me)
-          .then(returnedUser =>
-            User.findById(returnedUser._id, { password: 0 })
-              .then(user =>
-                expect(parseJSON(user)).to.eql(parseJSON(returnedUser))))
+        expect(res).to.have.status(200)
+        expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
+        expect(res.body).to.have.property('token')
+        expect(res.body).to.have.property('auth')
+        expect(res.body.auth).to.be.equal(true)
+
+        const userFromAPI = await me(res.body.token)
+        const userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
+
+        expect(userFromAPI._id).to.equal(userFromDB._id.toString())
+        expect(userFromAPI.name).to.equal(userFromDB.name)
+        expect(userFromAPI.email).to.equal(userFromDB.email)
       })
     })
 
     describe('.login', function () {
-      it('should authenticate a user', function () {
-        return loginUser()
-          .then(res => {
-            expect(res).to.have.status(200)
-            expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
-            expect(res.body).to.have.property('token')
-            expect(res.body).to.have.property('auth')
-            expect(res.body.auth).to.be.equal(true)
-            token = res.body.token
+      it('should authenticate a user', async () => {
+        const res = await loginUser()
 
-            return token
-          })
-          .then(me)
-          .then(returnedUser =>
-            User.findById(returnedUser._id, { password: 0 })
-              .then(user =>
-                expect(parseJSON(user)).to.eql(parseJSON(returnedUser))
-              )
-          )
-          .catch(err => expect(err).to.be.null)
+        expect(res).to.have.status(200)
+        expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
+        expect(res.body).to.have.property('token')
+        expect(res.body).to.have.property('auth')
+        expect(res.body.auth).to.be.equal(true)
+
+        const userFromAPI = await me(res.body.token)
+        const userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
+
+        expect(userFromAPI._id).to.equal(userFromDB._id.toString())
+        expect(userFromAPI.name).to.equal(userFromDB.name)
+        expect(userFromAPI.email).to.equal(userFromDB.email)
       })
     })
 
     describe('.me', function () {
-      it('should return the authenticated user', function () {
-        return me(token)
-          .then(returnedUser => User.findById(returnedUser._id, { password: 0 })
-            .then(user => expect(parseJSON(user)).to.eql(parseJSON(returnedUser))))
+      it('should return the authenticated user', async () => {
+        const res = await loginUser()
+
+        const userFromAPI = await me(res.body.token)
+        const userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
+
+        expect(userFromAPI._id).to.equal(userFromDB._id.toString())
+        expect(userFromAPI.name).to.equal(userFromDB.name)
+        expect(userFromAPI.email).to.equal(userFromDB.email)
       })
     })
 

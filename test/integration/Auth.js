@@ -43,75 +43,95 @@ describe('auth', function () {
   after(() => clearDB())
 
   describe('AuthController', function () {
-    describe('.register', function () {
-      it('should register a new user', async () => {
-        const res = await registerUser()
-
-        expect(res).to.have.status(200)
-        expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
-        expect(res.body).to.have.property('token')
-        expect(res.body).to.have.property('auth')
-        expect(res.body.auth).to.be.equal(true)
+    describe('.register', async () => {
+      let _res
+      before(async () => {
+        _res = await registerUser()
+      })
+      it('should return status 200', async () => {
+        expect(_res).to.have.status(200)
+      })
+      it('should return body with \'token\' property', async () => {
+        expect(_res.body).to.have.property('token')
+      })
+      it('should return body with \'auth\' property', async () => {
+        expect(_res.body).to.have.property('auth')
+      })
+      it('should return body.auth property with value \'true\'', async () => {
+        expect(_res.body.auth).to.be.equal(true)
       })
     })
 
-    describe('.login', function () {
-      it('should authenticate a user', async () => {
-        const res = await loginUser()
-
-        expect(res).to.have.status(200)
-        expect(res.body).to.not.be.equal(null).and.not.to.be.equal(undefined)
-        expect(res.body).to.have.property('token')
-        expect(res.body).to.have.property('auth')
-        expect(res.body.auth).to.be.equal(true)
+    describe('.login', () => {
+      let _res
+      before(async () => {
+        _res = await loginUser()
+      })
+      it('should return status 200', () => {
+        expect(_res).to.have.status(200)
+      })
+      it('should return body with \'token\' property', () => {
+        expect(_res.body).to.have.property('token')
+      })
+      it('should return body with \'auth\' property', () => {
+        expect(_res.body).to.have.property('auth')
+      })
+      it('should return body.auth property with value \'true\'', () => {
+        expect(_res.body.auth).to.be.equal(true)
       })
     })
 
-    describe('.me', function () {
-      it('should return the authenticated user', async () => {
-        const { body: loginResBody } = await loginUser()
-        const { status, body: userFromAPI } = await me(loginResBody.token)
-        const userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
-
-        expect(status).to.be.equal(200)
-        expect(userFromAPI).to.not.be.equal(null).and.not.to.be.equal(undefined)
-        expect(userFromAPI).to.have.property('_id')
-        expect(userFromAPI).to.have.property('name')
-        expect(userFromAPI).to.have.property('email')
-
+    describe('.me', () => {
+      let loginRes,
+        meResSuccess,
+        meResNoToken,
+        meResBadToken,
+        userFromAPI,
+        userFromDB
+      before(async () => {
+        loginRes = await loginUser()
+        meResSuccess = await me(loginRes.body.token)
+        meResNoToken = await me('')
+        meResBadToken = await me('somerandomtoken')
+        userFromAPI = meResSuccess.body
+        userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
+      })
+      it('should return status 200', () => {
+        expect(meResSuccess).to.have.status(200)
+      })
+      it('should return the authenticated user', () => {
         expect(userFromAPI._id).to.equal(userFromDB._id.toString())
         expect(userFromAPI.name).to.equal(userFromDB.name)
         expect(userFromAPI.email).to.equal(userFromDB.email)
       })
-    })
-
-    describe('.logout`', function () {
-      it('should log a user out', async () => {
-        const { status, body } = await logoutUser()
-        expect(status).to.be.equal(200)
-        expect(body).to.not.be.equal(null).and.not.to.be.equal(undefined)
-        expect(body).to.have.property('token')
-        expect(body.token).to.be.equal(null)
-        expect(body).to.have.property('auth')
-        expect(body.auth).to.be.equal(false)
+      it('should return status 403 if \'no token provided\'', async () => {
+        expect(meResNoToken).to.have.status(403)
+      })
+      it('should return message: \'No token provided.\' if it fails with 403', async () => {
+        expect(meResNoToken.body.message).to.be.eql('No token provided.')
+      })
+      it('should return status 500 if \'failed to authenticate token\'', async () => {
+        expect(meResBadToken).to.have.status(500)
+      })
+      it('should return message: \'Failed to authenticate token.\' if it fails with 500', async () => {
+        expect(meResBadToken.body.message).to.be.eql('Failed to authenticate token.')
       })
     })
-  })
 
-  describe('VerifyToken', function () {
-    it('should fail with 403 if \'no token provided\'', async () => {
-      const { status, body } = await me('')
-      expect(status).to.be.equal(403)
-      expect(body).to.have.property('message')
-      expect(body).to.have.property('auth')
-      expect(body.message).to.be.eql('No token provided.')
-    })
-    it('should fail with 500 if \'failed to authenticate token\'', async () => {
-      const { status, body } = await me('somerandomtoken')
-      expect(status).to.be.equal(500)
-      expect(body).to.have.property('message')
-      expect(body).to.have.property('auth')
-      expect(body.message).to.be.eql('Failed to authenticate token.')
+    describe('.logout`', () => {
+      let res
+      before(async () => {
+        res = await logoutUser()
+      })
+      it('should return status 200', () => {
+        expect(res).to.have.status(200)
+      })
+      it('should set the \'token\' property to null', () => {
+        expect(res.body.token).to.be.equal(null)
+      })
+      it('should set the \'auth\' property to false', () => {
+        expect(res.body.auth).to.be.equal(false)
+      })
     })
   })
 })

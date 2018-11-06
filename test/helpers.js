@@ -11,13 +11,9 @@ async function clearDB () {
 function getModel (model) {
   return mongoose.model(model)
 }
-function parseJSON (obj) {
-  return JSON.parse(JSON.stringify(obj))
-}
 
 module.exports = {
   getApp,
   clearDB,
-  getModel,
-  parseJSON
+  getModel
 }

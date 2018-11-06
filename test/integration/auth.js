@@ -16,6 +16,11 @@ const testUser = {
   email: 'admin@example.com',
   password: 'superSecret'
 }
+const wrongPasswordUser = {
+  name: 'superAdmin',
+  email: 'admin@example.com',
+  password: 'wrongpassword'
+}
 
 function registerUser () {
   return request(app)
@@ -26,6 +31,11 @@ function loginUser () {
   return request(app)
     .post('/api/auth/login')
     .send(testUser)
+}
+function loginUserWithWrongPassword () {
+  return request(app)
+    .post('/api/auth/login')
+    .send(wrongPasswordUser)
 }
 function logoutUser () {
   return request(app)
@@ -39,10 +49,10 @@ function me (token) {
 }
 
 describe('auth', function () {
-  before(() => clearDB())
-  after(() => clearDB())
+  beforeEach(() => clearDB())
+  afterEach(() => clearDB())
 
-  describe('AuthController', function () {
+  describe('.controller', function () {
     describe('.register', async () => {
       let registerRes
       before(async () => {
@@ -63,21 +73,43 @@ describe('auth', function () {
     })
 
     describe('.login', () => {
-      let loginRes
-      before(async () => {
-        loginRes = await loginUser()
+      describe('when no user found', () => {
+        let loginRes
+        before(async () => {
+          loginRes = await loginUser()
+        })
+        it('should return status 404', () => {
+          expect(loginRes).to.have.status(404)
+        })
+        it('should return message \'No user found.\'', () => {
+          expect(loginRes.error.text).to.be.equal('No user found.')
+        })
       })
-      it('should return status 200', () => {
-        expect(loginRes).to.have.status(200)
+      describe('when user found', () => {
+        let loginRes
+        before(async () => {
+          await registerUser()
+          loginRes = await loginUser()
+        })
+        it('should return status 200', () => {
+          expect(loginRes).to.have.status(200)
+        })
+        it('should return body.auth property with value \'true\'', () => {
+          expect(loginRes.body.auth).to.be.equal(true)
+        })
       })
-      it('should return body with \'token\' property', () => {
-        expect(loginRes.body).to.have.property('token')
-      })
-      it('should return body with \'auth\' property', () => {
-        expect(loginRes.body).to.have.property('auth')
-      })
-      it('should return body.auth property with value \'true\'', () => {
-        expect(loginRes.body.auth).to.be.equal(true)
+      describe('when wrong password', () => {
+        let loginRes
+        before(async () => {
+          await registerUser()
+          loginRes = await loginUserWithWrongPassword()
+        })
+        it('should return status 401', () => {
+          expect(loginRes).to.have.status(401)
+        })
+        it('should return body.auth property with value \'false\'', () => {
+          expect(loginRes.body.auth).to.be.equal(false)
+        })
       })
     })
 
@@ -89,6 +121,7 @@ describe('auth', function () {
         userFromAPI,
         userFromDB
       before(async () => {
+        await registerUser()
         loginRes = await loginUser()
         meResSuccess = await me(loginRes.body.token)
         meResNoToken = await me('')

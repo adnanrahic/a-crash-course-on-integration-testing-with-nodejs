@@ -3,19 +3,19 @@ const Mocha = require('mocha')
 const mocha = new Mocha()
 const chai = require('chai')
 chai.use(require('chai-http'))
-chai.use(require('chai-as-promised'))
 const testDir = 'test'
 
-// Add test files
-var files = Mocha.utils.lookupFiles(testDir, ['js'], true)
-files.forEach(function (file) {
-  mocha.addFile(file)
-})
+// Load .env vars
+require('dotenv')
+  .config({
+    path: `./lib/config/${process.env.NODE_ENV}.env`
+  })
 
-// Start server
-require('./server')
+// Add test files
+Mocha.utils
+  .lookupFiles(testDir, ['js'], true)
+  .map(file => mocha.addFile(file))
 
 // Run tests
-mocha.ui('bdd').run(code => {
-  process.exit(code)
-}) // exit the node process on test end
+mocha.ui('bdd').run(process.exit)
+// exit the node process on test end

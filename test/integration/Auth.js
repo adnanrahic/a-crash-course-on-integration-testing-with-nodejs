@@ -44,40 +44,40 @@ describe('auth', function () {
 
   describe('AuthController', function () {
     describe('.register', async () => {
-      let _res
+      let registerRes
       before(async () => {
-        _res = await registerUser()
+        registerRes = await registerUser()
       })
       it('should return status 200', async () => {
-        expect(_res).to.have.status(200)
+        expect(registerRes).to.have.status(200)
       })
       it('should return body with \'token\' property', async () => {
-        expect(_res.body).to.have.property('token')
+        expect(registerRes.body).to.have.property('token')
       })
       it('should return body with \'auth\' property', async () => {
-        expect(_res.body).to.have.property('auth')
+        expect(registerRes.body).to.have.property('auth')
       })
       it('should return body.auth property with value \'true\'', async () => {
-        expect(_res.body.auth).to.be.equal(true)
+        expect(registerRes.body.auth).to.be.equal(true)
       })
     })
 
     describe('.login', () => {
-      let _res
+      let loginRes
       before(async () => {
-        _res = await loginUser()
+        loginRes = await loginUser()
       })
       it('should return status 200', () => {
-        expect(_res).to.have.status(200)
+        expect(loginRes).to.have.status(200)
       })
       it('should return body with \'token\' property', () => {
-        expect(_res.body).to.have.property('token')
+        expect(loginRes.body).to.have.property('token')
       })
       it('should return body with \'auth\' property', () => {
-        expect(_res.body).to.have.property('auth')
+        expect(loginRes.body).to.have.property('auth')
       })
       it('should return body.auth property with value \'true\'', () => {
-        expect(_res.body.auth).to.be.equal(true)
+        expect(loginRes.body.auth).to.be.equal(true)
       })
     })
 
@@ -119,18 +119,18 @@ describe('auth', function () {
     })
 
     describe('.logout`', () => {
-      let res
+      let logoutRes
       before(async () => {
-        res = await logoutUser()
+        logoutRes = await logoutUser()
       })
       it('should return status 200', () => {
-        expect(res).to.have.status(200)
+        expect(logoutRes).to.have.status(200)
       })
       it('should set the \'token\' property to null', () => {
-        expect(res.body.token).to.be.equal(null)
+        expect(logoutRes.body.token).to.be.equal(null)
       })
       it('should set the \'auth\' property to false', () => {
-        expect(res.body.auth).to.be.equal(false)
+        expect(logoutRes.body.auth).to.be.equal(false)
       })
     })
   })

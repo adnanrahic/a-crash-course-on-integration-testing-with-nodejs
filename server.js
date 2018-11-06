@@ -5,5 +5,4 @@ require('dotenv')
 
 var app = require('./lib/app')
 var port = process.env.PORT || 3000
-const server = app.listen(port)
-module.exports = server
+app.listen(port)

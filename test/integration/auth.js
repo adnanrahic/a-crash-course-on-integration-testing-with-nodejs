@@ -16,6 +16,11 @@ const testUser = {
   email: 'admin@example.com',
   password: 'superSecret'
 }
+const badUser = {
+  name: '',
+  email: 'admin@example.com',
+  password: 'superSecret'
+}
 const wrongPasswordUser = {
   name: 'superAdmin',
   email: 'admin@example.com',
@@ -26,6 +31,11 @@ function registerUser () {
   return request(app)
     .post('/api/auth/register')
     .send(testUser)
+}
+function registerBadUser () {
+  return request(app)
+    .post('/api/auth/register')
+    .send(badUser)
 }
 function loginUser () {
   return request(app)
@@ -54,21 +64,30 @@ describe('auth', function () {
 
   describe('.controller', function () {
     describe('.register', async () => {
-      let registerRes
+      let registerUserRes,
+        registerBadUserRes
       before(async () => {
-        registerRes = await registerUser()
+        registerUserRes = await registerUser()
+        registerBadUserRes = await registerBadUser()
       })
-      it('should return status 200', async () => {
-        expect(registerRes).to.have.status(200)
+      describe('valid parameters', () => {
+        it('should return status 200', async () => {
+          expect(registerUserRes).to.have.status(200)
+        })
+        it('should return body.auth property with value \'true\'', async () => {
+          expect(registerUserRes.body.auth).to.be.equal(true)
+        })
+        it('should return body.token property', async () => {
+          expect(registerUserRes.body).to.have.property('token')
+        })
       })
-      it('should return body with \'token\' property', async () => {
-        expect(registerRes.body).to.have.property('token')
-      })
-      it('should return body with \'auth\' property', async () => {
-        expect(registerRes.body).to.have.property('auth')
-      })
-      it('should return body.auth property with value \'true\'', async () => {
-        expect(registerRes.body.auth).to.be.equal(true)
+      describe('bad parameters', () => {
+        it('should return 500', async () => {
+          expect(registerBadUserRes).to.have.status(500)
+        })
+        it('should return error message', async () => {
+          expect(registerBadUserRes.error.text).to.be.equal('Bad user parameters. Please add required fields \'name\', \'email\', and \'password\'.')
+        })
       })
     })
 
@@ -129,29 +148,35 @@ describe('auth', function () {
         userFromAPI = meResSuccess.body
         userFromDB = await User.findById(userFromAPI._id, { _id: 1, name: 1, email: 1 })
       })
-      it('should return status 200', () => {
-        expect(meResSuccess).to.have.status(200)
+      describe('when user is authenticated', () => {
+        it('should return status 200', () => {
+          expect(meResSuccess).to.have.status(200)
+        })
+        it('should return the authenticated user', () => {
+          expect(userFromAPI._id).to.equal(userFromDB._id.toString())
+          expect(userFromAPI.name).to.equal(userFromDB.name)
+          expect(userFromAPI.email).to.equal(userFromDB.email)
+        })
       })
-      it('should return the authenticated user', () => {
-        expect(userFromAPI._id).to.equal(userFromDB._id.toString())
-        expect(userFromAPI.name).to.equal(userFromDB.name)
-        expect(userFromAPI.email).to.equal(userFromDB.email)
+      describe('when no token present', () => {
+        it('should return status 403', async () => {
+          expect(meResNoToken).to.have.status(403)
+        })
+        it('should return message: \'No token provided.\'', async () => {
+          expect(meResNoToken.body.message).to.be.eql('No token provided.')
+        })
       })
-      it('should return status 403 if \'no token provided\'', async () => {
-        expect(meResNoToken).to.have.status(403)
-      })
-      it('should return message: \'No token provided.\' if it fails with 403', async () => {
-        expect(meResNoToken.body.message).to.be.eql('No token provided.')
-      })
-      it('should return status 500 if \'failed to authenticate token\'', async () => {
-        expect(meResBadToken).to.have.status(500)
-      })
-      it('should return message: \'Failed to authenticate token.\' if it fails with 500', async () => {
-        expect(meResBadToken.body.message).to.be.eql('Failed to authenticate token.')
+      describe('when bad token', () => {
+        it('should return status 500', async () => {
+          expect(meResBadToken).to.have.status(500)
+        })
+        it('should return message: \'Failed to authenticate token.\'', async () => {
+          expect(meResBadToken.body.message).to.be.eql('Failed to authenticate token.')
+        })
       })
     })
 
-    describe('.logout`', () => {
+    describe('.logout', () => {
       let logoutRes
       before(async () => {
         logoutRes = await logoutUser()

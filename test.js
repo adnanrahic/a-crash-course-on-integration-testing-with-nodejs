@@ -1,15 +1,16 @@
 /* eslint-env mocha */
-const Mocha = require('mocha')
-const mocha = new Mocha()
-const chai = require('chai')
-chai.use(require('chai-http'))
-const testDir = 'test'
 
 // Load .env vars
 require('dotenv')
   .config({
     path: `./lib/config/${process.env.NODE_ENV}.env`
   })
+
+const Mocha = require('mocha')
+const mocha = new Mocha()
+const chai = require('chai')
+chai.use(require('chai-http'))
+const testDir = 'test'
 
 // Add test files
 Mocha.utils

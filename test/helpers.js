@@ -5,7 +5,7 @@ const _ = require('lodash')
 function getApp () {
   return app
 }
-async function clearDB () {
+function clearDB () {
   return Promise.all(_.map(mongoose.models, model => model.deleteMany()))
 }
 function getModel (model) {
